@@ -1,4 +1,4 @@
-# 🏷️ Tag Recommender Agent: Learning Journey
+# 🏷️ Tag Recommender Agent: Learning
 
 A step-by-step learning repo: from NLP basics to an **LLM-based agent that recommends product tags** from vendor text.
 Built alongside my research proposal on *autonomous tag recommendation using syntactic patterns and neighbouring tag attributes*.
@@ -6,8 +6,7 @@ Built alongside my research proposal on *autonomous tag recommendation using syn
 **Background:** time-series forecasting (LSTM, Transformer) → learning NLP, recommender systems and AI agents.
 **Data:** [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/) item metadata, category *All_Beauty* (vendor text → tags from the `details` attributes).
 
-## 🗺️ Roadmap (16 weeks)
-
+## 🗺️ Roadmap
 | Phase | Weeks | Topic | What I learn / build | Notebook | Status |
 |---|---|---|---|---|---|
 | 1 | 1–3 | **NLP foundations** | Text cleaning, tokenization, TF-IDF, embeddings, spaCy POS & dependency parsing, syntactic patterns | [Phase1_NLP_Foundations](Phase1_NLP_Foundations.ipynb) | ✅ Done |
