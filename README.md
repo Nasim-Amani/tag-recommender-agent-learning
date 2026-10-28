@@ -1,62 +1,63 @@
-# 🏷️ Tag Recommender Agent: Learning
+# 🏷️ Tag Recommender Agent: Learning Repo
 
-A step-by-step learning repo: from NLP basics to an **LLM-based agent that recommends product tags** from vendor text.
-Built alongside my research proposal on *autonomous tag recommendation using syntactic patterns and neighbouring tag attributes*.
+From NLP basics to an **LLM-based agent that recommends product tags** from vendor text.
+Companion to my research proposal: *autonomous tag recommendation using **syntactic patterns** and **neighbouring tag attributes***.
 
-**Background:** time-series forecasting (LSTM, Transformer) → learning NLP, recommender systems and AI agents.
-**Data:** [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/) item metadata, category *All_Beauty* (vendor text → tags from the `details` attributes).
+**Data:** [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/), *All_Beauty* metadata: 19,408 products · 214 tags · 2.26 tags/product · split **by vendor** (no leakage)
+**Background:** time-series forecasting (LSTM, Transformer) → NLP, recommender systems, AI agents
 
 ## 🗺️ Roadmap
-| Phase | Weeks | Topic | What I learn / build | Notebook | Status |
-|---|---|---|---|---|---|
-| 1 | 1–3 | **NLP foundations** | Text cleaning, tokenization, TF-IDF, embeddings, spaCy POS & dependency parsing, syntactic patterns | [Phase1_NLP_Foundations](Phase1_NLP_Foundations.ipynb) | ✅ Done |
-| 2 | 3–5 | **Recommenders & multi-label** | Multi-label classification, leak-free vendor split, metrics (P@k, F1, MAP), baselines: popularity, TF-IDF + LR, DistilBERT, error analysis | [Phase2_Baselines](Phase2_Baselines.ipynb) | ✅ Done |
-| 3 | 5–6 | **Embeddings & retrieval** | MiniLM + FAISS (dense) and TF-IDF (sparse) retrieval, kNN tag propagation, hybrid (LR + kNN), leakage check, rare & implicit tags, explainability | [Phase3_Retrieval](Phase3_Retrieval.ipynb) | ✅ Done |
-| 4 | 6–8 | **Tag graphs** | Co-occurrence, PMI / NPMI / P(b\|a), networkx graph & communities, graph re-ranking, conflict filter, ablation, node2vec-style tag embeddings | [Phase4_Tag_Graphs](Phase4_Tag_Graphs.ipynb) | ✅ Done |
-| 5 | 8–10 | **LLMs** | Qwen2.5-1.5B: zero/few-shot prompting, JSON output, RAG, abstention, LoRA fine-tuning | [Phase5_LLMs](Phase5_LLMs.ipynb) | 🟡 In progress |
-| 6 | 10–12 | **Agent** | Tool calling, ReAct loop, verifier, memory → end-to-end tag agent | — | ⬜ |
-| 7 | 12–16 | **Experiments & paper** | Ablations, cross-domain tests (AE-110K / MAVE), error analysis, cost/latency, write-up | — | ⬜ |
+| # | Topic | Key methods | Notebook | Status |
+|---|---|---|---|---|
+| 1 | NLP foundations | TF-IDF, embeddings, spaCy syntactic patterns | [Phase1](Phase1_NLP_Foundations.ipynb) | ✅ |
+| 2 | Baselines | Multi-label, vendor split, TF-IDF + LR, DistilBERT | [Phase2](Phase2_Baselines.ipynb) | ✅ |
+| 3 | Retrieval | MiniLM + FAISS, kNN tag propagation, hybrid | [Phase3](Phase3_Retrieval.ipynb) | ✅ |
+| 4 | Tag graphs | PMI, communities, graph re-ranking, conflicts | [Phase4](Phase4_Tag_Graphs.ipynb) | ✅ |
+| 5 | LLMs | Qwen2.5: zero/few-shot, JSON, RAG, abstention, LoRA | [Phase5](Phase5_LLMs.ipynb) | ✅ CPU run · ⏳ GPU run |
+| 6 | Agent | Tools, verifier, memory, LLM on uncertain tags, ReAct | [Phase6](Phase6_Agent.ipynb) | 🟡 |
+| 7 | Experiments & paper | Ablations, cross-domain, error analysis, cost | — | ⬜ |
 
-## 🏁 Results so far (test set, vendor split)
+## 🏁 Results (test set, vendor split)
+| Model | micro-F1 | macro-F1 | P@3 | MAP |
+|---|---|---|---|---|
+| Popularity (no text) | 0.152 | 0.007 | 0.134 | 0.198 |
+| **TF-IDF + LR** | 0.579 | 0.306 | 0.463 | 0.683 |
+| DistilBERT | **0.589** | **0.318** | 0.463 | 0.686 |
+| kNN (TF-IDF / MiniLM) | 0.541 / 0.526 | 0.269 / 0.266 | 0.430 / 0.418 | 0.634 / 0.613 |
+| Hybrid (LR + kNN) | 0.580 | 0.304 | **0.465** | **0.687** |
+| + tag graph | no change (best β = 0) | | | |
 
-| Model | micro-F1 | macro-F1 | P@3 | MAP | Cost |
-|---|---|---|---|---|---|
-| Popularity (no text) | 0.152 | 0.007 | 0.134 | 0.198 | — |
-| TF-IDF + Logistic Regression | 0.579 | 0.306 | 0.463 | 0.683 | ~50 s, CPU |
-| DistilBERT (fine-tuned) | **0.589** | **0.318** | 0.463 | 0.686 | ~14 min, GPU |
-| kNN (MiniLM + FAISS) | 0.526 | 0.266 | 0.418 | 0.613 | ~1 min, GPU |
-| kNN (TF-IDF) | 0.541 | 0.269 | 0.430 | 0.634 | ~1 min, CPU |
-| Hybrid (LR + kNN, α = 0.9) | 0.580 | 0.304 | **0.465** | **0.687** | — |
-| + tag-graph re-ranking | = no change (best β = 0) | | | | |
-| LLM variants | *Phase 5 (500-product sample)* | | | | |
+➡️ **Ceiling at P@3 ≈ 0.46:** every method learns from the **same short vendor titles**, so they mostly repeat what TF-IDF + LR already knows.
 
-**A ceiling at P@3 ≈ 0.46:** a deeper text model, similar products and tag relations all come from the **same vendor data** and mostly repeat what TF-IDF + LR already knows.
+## 🔑 Key findings
+**1 · Data**
+- 82% of products have **only a short title**. Only ~37% of tag values are **written in the text** → most tags are **implicit**.
+- Long-tail tags → report **macro-F1** too.
 
-## 🔑 Key findings so far
-**Data (Phase 1)**
-- **82%** of products have only a short title (median 22 words).
-- Only **~37%** of tag values are written explicitly in the text; grammar patterns alone recover **~10%** → motivates a **hybrid** of patterns, retrieval and LLM reasoning.
-- Tags follow a **long tail** → report **macro-F1** as well as micro-F1.
+**2 · Baselines**
+- Text helps: ~3× better than popularity.
+- **DistilBERT ≈ LR at ~20× the cost** → the bottleneck is **information**, not model power.
+- 36% of "wrong" predictions are in the text → **vendor tags are incomplete** (missing labels).
 
-**Baselines (Phase 2)**
-- After cleaning: **19,408 products, 214 descriptive tags, 2.26 tags/product**; split **by vendor**.
-- Reading the text helps: models are **~3× better** than predicting popular tags.
-- **DistilBERT ≈ TF-IDF + LR** at ~20× the cost → the bottleneck is the **information in short titles**.
-- **36%** of "wrong" predictions have their value written in the text → vendor tags are **incomplete**.
-- Error types: label noise, implicit claims, word confusion, **negation** ("No Clip"), cleaning leftovers.
+**3 · Retrieval**
+- kNN < LR; **words beat meaning** for finding neighbours. Hybrid ≈ LR.
+- Helps on **rare tags** (+11% F1), not on implicit ones. A random split inflates scores (27.8% same-vendor neighbours).
 
-**Retrieval (Phase 3)**
-- **kNN alone < LR** (P@3 0.42–0.43 vs 0.46); **words beat meaning** for finding neighbours (TF-IDF kNN > MiniLM kNN).
-- **Hybrid ≈ LR** (+0.002 P@3): neighbours found by text mostly repeat the text.
-- Helps only on **rare tags** (< 50 examples, 40% of tags): F1 +11%; **no gain on implicit tags**.
-- Random split → **27.8%** same-vendor nearest neighbours; inflates macro-F1 by ~10% → vendor split needed.
-- kNN gives **evidence** for each tag; low neighbour similarity signals when to **abstain**.
+**4 · Tag graph**
+- Finds **6 product families** from co-occurrence alone (211 tags, 1,038 edges).
+- Re-ranking doesn't help: the graph knows **which attribute**, not **which value** → useful for **explanations and conflict checks**.
 
-**Tag graph (Phase 4)**
-- From tag co-occurrence alone, the graph found **6 product families** (makeup, skin care, nails, hair extensions, lashes & accessories, hair care): **211 tags, 1,038 edges**.
-- Clear product logic: `human hair` ⇒ some `Hair Type` (straight 43% · wavy 34% · curly 19%).
-- **Re-ranking does not help** (best β = 0; boosting hurts rare tags): the graph says **which attribute**, not **which value**, and LR already learned the co-occurrences.
-- Useful for the agent as **explanation**, **completeness** and **conflict** checks; tag embeddings find alternatives (e.g. installation types).
+**5 · LLMs** *(CPU learning run: 0.5B model, 30 products → concepts only, not final numbers)*
+- Design: LR proposes **15 candidates** → the LLM chooses → **JSON** + defensive parser.
+- The small model **over-tags**: it picks ~12 of 15 candidates (truth ≈ 2.4) → high recall, low precision.
+- **Read recall together with avg tags**. LLM "implicit tag" gains can just come from choosing many tags.
+- A **strict prompt** acts like a threshold (precision ↑, recall ↓), but the model **never abstains** by itself.
+- Cost: **10–30 s/product** on CPU vs < 0.001 s for LR.
+- ⏳ Final run: Qwen2.5-1.5B on GPU, 500 products, + LoRA.
+
+**6 · Agent (in progress)**
+- Workflow: **tools** (LR · spaCy · similar products · tag graph · vendor memory) → **evidence table** → learned **verifier** → ✅ accept / ❌ reject / ❓ uncertain → **LLM only for ❓** → **abstain** if nothing is confident.
+- Direct test of the proposal: do **syntax** and **neighbouring-tag** evidence add information beyond LR?
 
 ## 📁 Structure
 ```
@@ -66,6 +67,6 @@ Built alongside my research proposal on *autonomous tag recommendation using syn
 ├── Phase3_Retrieval.ipynb
 ├── Phase4_Tag_Graphs.ipynb
 ├── Phase5_LLMs.ipynb
-└── ...                       # one notebook per phase
+└── Phase6_Agent.ipynb
 ```
-*Data and model files are not included (size + dataset license); notebooks download the data and save outputs to Google Drive.*
+*Data and models are not included (size + license). The notebooks download the data and save outputs to Google Drive.*
